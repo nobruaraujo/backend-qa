@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
+import static org.assertj.core.api.InstanceOfAssertFactories.LIST;
 import static org.mockito.Mockito.*;
 
 public class MessageRepositoryTest {
@@ -30,13 +32,9 @@ public class MessageRepositoryTest {
     }
 
     @Test
-    void shouldAllowRegisterMessage() {
+    void shouldRegisterMessage() {
         //Arrange
-        var message = Message.builder()
-                .id(UUID.randomUUID())
-                .user("João")
-                .content("Message content")
-                .build();
+        Message message = messageMock();
 
         when(messageRepository.save(any(Message.class))).thenReturn(message);
 
@@ -52,17 +50,75 @@ public class MessageRepositoryTest {
     }
 
     @Test
-    void shouldAllowUpdateMessage() {
-        fail("Test not implemented");
+    void shouldRemoveMessage() {
+        //Arrange
+        var id = UUID.randomUUID();
+
+        // Faça nada quando no meu repositório for chamado o método deleteById sendo informado qualquer UUID
+        doNothing().when(messageRepository).deleteById(any(UUID.class));
+
+        //Act - Faça a deleção do ID id
+        messageRepository.deleteById(id);
+
+        //Assert - Verifique no meu repositório se pelo menos passa uma vez o método deleteById sendo informado qualquer um UUID
+        verify(messageRepository, times(1)).deleteById(any(UUID.class));
     }
 
     @Test
-    void shouldAllowRemoveMessage() {
-        fail("Test not implemented");
+    void shouldSearchMessage() {
+        //Arrange
+        var id = UUID.randomUUID();
+        var message = messageMock();
+        message.setId(id);
+
+        when(messageRepository.findById(any(UUID.class))).thenReturn(Optional.of(message));
+
+        //Act
+        var messageRegisteredOptional = messageRepository.findById(id);
+
+
+        //Assert
+        assertThat(messageRegisteredOptional)
+                .isPresent()
+                .containsSame(message);
+
+        messageRegisteredOptional.ifPresent(messageRegistered -> {
+            assertThat(messageRegistered.getId()).isEqualTo(message.getId());
+        });
+
+        verify(messageRepository, times(1)).findById(any(UUID.class));
+
     }
 
     @Test
-    void shouldAllowSearchMessage() {
-        fail("Test not implemented");
+    void shouldListMessages() {
+        //Arrange
+        Message message1 = messageMock();
+        Message message2 = messageMock();
+        var messageList = Arrays.asList(
+                message1,
+                message2
+        );
+        when(messageRepository.findAll()).thenReturn(messageList);
+
+        //Act
+        var messagesReturned = messageRepository.findAll();
+
+        //Assert
+
+        // Cheque se a variável que armazena o consumo do banco tem 2 índices e contém em qualquer ordem o conteúdo da mensagem1 e mensagem2
+        assertThat(messagesReturned)
+                .hasSize(2)
+                .containsExactlyInAnyOrder(message1, message2);
+
+        // Verifique se no repositório, foi chamado uma vez o método findAll()
+        verify(messageRepository, times(1)).findAll();
+    }
+
+    private Message messageMock() {
+        return Message.builder()
+                .user("João")
+                .content("Message content")
+                .build();
     }
 }
