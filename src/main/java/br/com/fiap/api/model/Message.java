@@ -31,7 +31,7 @@ public class Message {
     @NotEmpty(message = "Conteúdo não pode estar vazio")
     private String content;
 
-    @CreationTimestamp
+    //@CreationTimestamp
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSSSS")
     private LocalDateTime creationMessageTime;
 
