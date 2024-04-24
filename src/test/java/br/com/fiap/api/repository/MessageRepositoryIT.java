@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -23,7 +23,7 @@ public class MessageRepositoryIT {
     @Test
     void shouldCreateTable() {
         var countRegisters = messageRepository.count();
-        assertThat(countRegisters).isNotNegative();
+        assertThat(countRegisters).isGreaterThan(0);
     }
 
     @Test
@@ -48,16 +48,19 @@ public class MessageRepositoryIT {
 
     @Test
     void shouldRemoveMessage() {
-        fail("Test not implemented");
+        //Arrange
+        var id = UUID.fromString("a5a7cf44-e8b0-4579-a9db-c7cab7bfbbc8");
+        //Act
+        messageRepository.deleteById(id);
+        var messageReceivedOptional = messageRepository.findById(id);
+        //Assert
+        assertThat(messageReceivedOptional).isEmpty();
     }
 
     @Test
     void shouldSearchMessage() {
         //Arrange
-        var id = UUID.randomUUID();
-        var message = messageMock();
-        message.setId(id);
-        registerMessage(message);
+        var id = UUID.fromString("e0a0fe4a-d907-4678-9691-87d8e07d41fc");
 
         //Act
         var receivedMessageOptional = messageRepository.findById(id);
@@ -66,8 +69,7 @@ public class MessageRepositoryIT {
         assertThat(receivedMessageOptional).isPresent();
 
         receivedMessageOptional.ifPresent(receivedMessage -> {
-            assertThat(receivedMessage.getId()).isEqualTo(message.getId());
-            assertThat(receivedMessage.getContent()).isEqualTo(message.getContent());
+            assertThat(receivedMessage.getId()).isEqualTo(id);
 
         });
 
@@ -75,7 +77,10 @@ public class MessageRepositoryIT {
 
     @Test
     void shouldListAllMessages() {
-        fail("Test not implemented");
+        //Act
+        List<Message> messagesOptional = messageRepository.findAll();
+        //Assert
+        assertThat(messagesOptional).asList().hasSizeGreaterThan(0);
     }
 
     private Message messageMock() {
